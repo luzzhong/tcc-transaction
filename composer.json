@@ -1,0 +1,44 @@
+{
+    "name": "loyaltylu/tcc-transaction",
+    "authors": [
+        {
+            "name": "luzhong",
+            "email": "wanghuimin@jieruiedu.com"
+        }
+    ],
+    "require": {},
+    "replace":{
+        "loyaltylu/transaction": "1.1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "LoyaltyLu\\TccTransaction\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LoyaltyLu\\TccTransaction\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {},
+        "hyperf": {
+            "config": [
+                "LoyaltyLu\\TccTransaction\\ConfigProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "./bin/co-phpunit --colors=always",
+        "test-coverage": "phpunit --colors=always --coverage-clover clover.xml",
+        "license-check": "docheader check src/ test/",
+        "cs-fix": "php-cs-fixer fix $1",
+        "json-fix": "./bin/composer-json-fixer",
+        "analyse": "phpstan analyse --memory-limit 300M -l 3 -c phpstan.neon"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
