@@ -11,6 +11,7 @@ use Hyperf\Utils\Exception\ParallelExecutionException;
 use Hyperf\Utils\Parallel;
 use Hyperf\Di\Container;
 use Hyperf\Utils\Coroutine;
+use Throwable;
 
 class TccTransaction
 {
@@ -26,7 +27,10 @@ class TccTransaction
      * @param $servers
      * @param $tcc_method
      * @param $tid
+     * @param $params
+     * @param int $flag
      * @return array
+     * @throws Throwable
      */
     public function send($proceedingJoinPoint, $servers, $tcc_method, $tid, $params, $flag = 0)
     {
