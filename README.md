@@ -14,6 +14,8 @@
 
 #### 使用方法：
 
+组件尚在完善中，感兴趣的小伙伴可以先使用本地加载
+
 `git clone https://github.com/LoyaltyLu/tcc-transaction.git`
 
 
