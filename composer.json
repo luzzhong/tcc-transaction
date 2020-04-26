@@ -6,7 +6,11 @@
             "email": "979126035@qq.com"
         }
     ],
-    "require": {},
+    "require": {
+        "hyperf/nsq": "~1.1.0",
+        "hyperf/snowflake": "~1.1.0",
+        "hyperf/logger": "~1.1.0"
+    },
     "replace":{
         "loyaltylu/transaction": "1.1.0"
     },

@@ -6,6 +6,8 @@ namespace LoyaltyLu\TccTransaction;
 
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\Redis\Redis;
+use Hyperf\Snowflake\IdGeneratorInterface;
+use Hyperf\Utils\ApplicationContext;
 
 class State
 {
@@ -28,7 +30,10 @@ class State
      */
     public function initStatus($services, $params)
     {
-        $tid = session_create_id(md5(microtime()));
+        $container = ApplicationContext::getContainer();
+        $generator = $container->get(IdGeneratorInterface::class);
+        $tid = (string)$generator->generate();
+//        $tid = session_create_id(md5(microtime()));
         $tccData = [
             'tid' => $tid, //事务id
             'services' => $services, //参与者信息
@@ -50,13 +55,14 @@ class State
      * @param $tid
      * @param $data
      */
-    public function upAllTccStatus($tid, $tcc_method, $status)
+    public function upAllTccStatus($tid, $tcc_method, $status,$params)
     {
         $originalData = $this->redis->hget("Tcc", $tid);
         $originalData = json_decode($originalData, true);
         $originalData['tcc_method'] = $tcc_method;
         $originalData['status'] = $status;
         $originalData['last_update_time'] = time();
+        $originalData['content']=$params;
         $this->redis->hSet('Tcc', $tid, json_encode($originalData)); //主服务状态
     }
 

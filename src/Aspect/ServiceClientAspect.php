@@ -10,6 +10,7 @@ use Hyperf\Di\Annotation\Aspect;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\Di\Aop\AbstractAspect;
 use Hyperf\Di\Aop\ProceedingJoinPoint;
+use Hyperf\Nsq\Nsq;
 use Hyperf\RpcClient\Exception\RequestException;
 use Hyperf\RpcClient\ServiceClient;
 use Hyperf\Di\Container;
@@ -55,6 +56,10 @@ class ServiceClientAspect extends AbstractAspect
             if ($tcc_method == 'tryMethod') {
                 $params = $proceedingJoinPoint->getArguments()[1][0];
                 $tid = $this->state->initStatus($servers, $params);#初始化事务状态
+                #放入nsql队列
+                $nsq = make(Nsq::class);
+                $msg1 = json_encode(['tid' => $tid, 'info' => $proceedingJoinPoint,'id'=>1]);
+                $nsq->publish("tcc-transaction", $msg1,5);
                 return $this->tccTransaction->send($proceedingJoinPoint, $servers, $tcc_method, $tid, $params);
             }
         }

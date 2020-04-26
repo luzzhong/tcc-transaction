@@ -4,11 +4,13 @@
 namespace LoyaltyLu\TccTransaction;
 
 use Hyperf\Di\Annotation\Inject;
-use Hyperf\TccTransaction\Exception\TccTransactionException;
+use Hyperf\Nsq\Nsq;
+use LoyaltyLu\TccTransaction\Exception\TccTransactionException;
 use Hyperf\Utils\ApplicationContext;
 use Hyperf\Utils\Exception\ParallelExecutionException;
 use Hyperf\Utils\Parallel;
 use Hyperf\Di\Container;
+use Hyperf\Utils\Coroutine;
 
 class TccTransaction
 {
@@ -26,8 +28,14 @@ class TccTransaction
      * @param $tid
      * @return array
      */
-    public function send($proceedingJoinPoint, $servers, $tcc_method, $tid, $params)
+    public function send($proceedingJoinPoint, $servers, $tcc_method, $tid, $params, $flag = 0)
     {
+        if ($flag) {
+            $nsq = make(Nsq::class);
+            $msg1 = json_encode(['tid' => $tid, 'info' => $proceedingJoinPoint, 'id' => 2]);
+            $nsq->publish("tcc-transaction", $msg1, 5);
+        }
+        $this->state->upAllTccStatus($tid, $tcc_method, 'normal', $params);
         $parallel = new Parallel();
         if ($tcc_method == 'tryMethod') {
             $parallel->add(function () use ($proceedingJoinPoint) {
@@ -49,15 +57,21 @@ class TccTransaction
             });
         }
         try {
+//            if ($tcc_method == 'confirmMethod') {
+//                throw new ParallelExecutionException(222);
+//            }
+//            if ($tcc_method == 'cancelMethod') {
+//                throw new ParallelExecutionException(222);
+//            }
             $results = $parallel->wait();
-            #TODO: 如果等待发起时本服务挂了，如何处理
-            $this->state->upAllTccStatus($tid, $tcc_method, 'success');
+            $params[$tcc_method] = $results;#记录每阶段成功返回值传递到下一阶段
+            $this->state->upAllTccStatus($tid, $tcc_method, 'success', $params);
             if ($tcc_method == 'tryMethod') {
                 $results = $this->send($proceedingJoinPoint, $servers, 'confirmMethod', $tid, $params);
             }
             return $results;
-        } catch (ParallelExecutionException $e) {
-            return $this->errorTransction($tcc_method, $proceedingJoinPoint, $servers, $tid, $params);
+        } catch (ParallelExecutionException $exception) {
+            return $this->errorTransction($exception, $tcc_method, $proceedingJoinPoint, $servers, $tid, $params);
         }
 
     }
@@ -71,11 +85,12 @@ class TccTransaction
      * @param $params
      * @return array
      */
-    public function errorTransction($tcc_method, $proceedingJoinPoint, $servers, $tid, $params)
+    public function errorTransction($exception, $tcc_method, $proceedingJoinPoint, $servers, $tid, $params)
     {
         switch ($tcc_method) {
             case 'tryMethod':
                 return $this->send($proceedingJoinPoint, $servers, 'cancelMethod', $tid, $params); #tryMethod阶段失败直接回滚
+            // TODO: 更改事务状态
             case 'cancelMethod':
                 if ($this->state->upTccStatus($tid, $tcc_method, 'retried_cancel_count')) {
                     return $this->send($proceedingJoinPoint, $servers, 'cancelMethod', $tid, $params); #tryMethod阶段失败直接回滚
