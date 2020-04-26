@@ -3,6 +3,21 @@
 
 #### 使用方法：
 
+`git clone https://github.com/LoyaltyLu/tcc-transaction.git`
+
+
+composer 中加入
+```
+"require": {
+    "loyaltylu/tcc-transaction":"dev-master",
+ },
+ "repositories": {
+    "loyaltylu":{
+            "type": "path",
+            "url": "../loyaltylu/*"
+    },
+}
+```
 * 引用注解：
 
 ```php
