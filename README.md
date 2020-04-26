@@ -1,5 +1,16 @@
 # tcc-transaction
-基于Hyperf的分布式事务
+基于Hyperf的分布式事务,开始事务后如果出现异常默认会重试1次，默认事务超时时间5s，超过5s后事务将被回收，执行补偿机制，需要各个服务提供者做好幂等
+
+#### 所需要的服务：
+[nsq](https://nsq.io/overview/quick_start.html)
+
+>   不同服务尽量配置不同nsq，避免数据混淆消费失败
+
+`composer require hyperf/nsq`
+
+
+`php bin/hyperf.php vendor:publish hyperf/nsq`
+
 
 #### 使用方法：
 

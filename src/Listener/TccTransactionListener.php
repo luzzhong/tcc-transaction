@@ -52,6 +52,12 @@ class TccTransactionListener extends AbstractConsumer
         $info = json_decode($payload->getBody());
         $tccInfo = $this->redis->hget("Tcc", $info->tid);
         $data = json_decode($tccInfo, true);
+        if ($data['last_update_time'] + 5 > time()) {
+            $nsq = make(Nsq::class);
+            $msg = json_encode(['tid' => $tid, 'info' => $proceedingJoinPoint]);
+            $nsq->publish("tcc-transaction", $msg, 5);
+            return Result::ACK;
+        }
         if ($data['status'] != 'success') {
             if ($data['tcc_method'] == 'tryMethod') {
                 $this->tcc->send($info->info, (object)$data['services'], 'cancelMethod', $info->tid, $data['content'], 1);
