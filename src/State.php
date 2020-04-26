@@ -42,6 +42,8 @@ class State
             'tcc_method' => 'tryMethod', //try,confirm,cancel (当前是哪个阶段)
             'retried_cancel_count' => self::RETRIED_CANCEL_COUNT, //重试次数
             'retried_confirm_count' => self::RETRIED_CONFIRM_COUNT, //重试次数
+            'retried_cancel_nsq_count' => self::RETRIED_CANCEL_COUNT, //重试次数
+            'retried_confirm_nsq_count' => self::RETRIED_CONFIRM_COUNT, //重试次数
             'retried_max_count' => self::RETRIED_MAX_COUNT, //最大允许重试次数
             'create_time' => time(), //创建时间
             'last_update_time' => time(), //最后的更新时间

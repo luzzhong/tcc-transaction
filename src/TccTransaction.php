@@ -32,9 +32,10 @@ class TccTransaction
     {
         if ($flag) {
             $nsq = make(Nsq::class);
-            $msg1 = json_encode(['tid' => $tid, 'info' => $proceedingJoinPoint, 'id' => 2]);
-            $nsq->publish("tcc-transaction", $msg1, 5);
+            $msg = json_encode(['tid' => $tid, 'info' => $proceedingJoinPoint]);
+            $nsq->publish("tcc-transaction", $msg, 5);
         }
+
         $this->state->upAllTccStatus($tid, $tcc_method, 'normal', $params);
         $parallel = new Parallel();
         if ($tcc_method == 'tryMethod') {
@@ -57,12 +58,6 @@ class TccTransaction
             });
         }
         try {
-//            if ($tcc_method == 'confirmMethod') {
-//                throw new ParallelExecutionException(222);
-//            }
-//            if ($tcc_method == 'cancelMethod') {
-//                throw new ParallelExecutionException(222);
-//            }
             $results = $parallel->wait();
             $params[$tcc_method] = $results;#记录每阶段成功返回值传递到下一阶段
             $this->state->upAllTccStatus($tid, $tcc_method, 'success', $params);
@@ -95,12 +90,11 @@ class TccTransaction
                 if ($this->state->upTccStatus($tid, $tcc_method, 'retried_cancel_count')) {
                     return $this->send($proceedingJoinPoint, $servers, 'cancelMethod', $tid, $params); #tryMethod阶段失败直接回滚
                 }
-                throw new  TccTransactionException('回滚异常');
+                return ['status' => 0, 'msg' => '失败'];
             case 'confirmMethod':
                 if ($this->state->upTccStatus($tid, $tcc_method, 'retried_confirm_count')) {
                     return $this->send($proceedingJoinPoint, $servers, 'confirmMethod', $tid, $params);
                 }
-                $params['cancel_confirm_flag'] = 1;
                 return $this->send($proceedingJoinPoint, $servers, 'cancelMethod', $tid, $params);
         }
 

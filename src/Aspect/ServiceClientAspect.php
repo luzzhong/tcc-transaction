@@ -58,8 +58,8 @@ class ServiceClientAspect extends AbstractAspect
                 $tid = $this->state->initStatus($servers, $params);#初始化事务状态
                 #放入nsql队列
                 $nsq = make(Nsq::class);
-                $msg1 = json_encode(['tid' => $tid, 'info' => $proceedingJoinPoint,'id'=>1]);
-                $nsq->publish("tcc-transaction", $msg1,5);
+                $msg = json_encode(['tid' => $tid, 'info' => $proceedingJoinPoint,'id'=>1]);
+                $nsq->publish("tcc-transaction", $msg,5);
                 return $this->tccTransaction->send($proceedingJoinPoint, $servers, $tcc_method, $tid, $params);
             }
         }
