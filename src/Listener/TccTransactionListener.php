@@ -54,7 +54,7 @@ class TccTransactionListener extends AbstractConsumer
         $data = json_decode($tccInfo, true);
         if ($data['last_update_time'] + 5 > time()) {
             $nsq = make(Nsq::class);
-            $msg = json_encode(['tid' => $tid, 'info' => $proceedingJoinPoint]);
+            $msg = json_encode(['tid' => $info->tid, 'info' => $info->info]);
             $nsq->publish("tcc-transaction", $msg, 5);
             return Result::ACK;
         }
