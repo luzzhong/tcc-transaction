@@ -14,7 +14,7 @@ composer 中加入
  "repositories": {
     "loyaltylu":{
             "type": "path",
-            "url": "../loyaltylu/*"
+            "url": "../loyaltylu/*" #gitclone本地路径
     },
 }
 ```
