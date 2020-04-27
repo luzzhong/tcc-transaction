@@ -14,6 +14,7 @@ use Hyperf\Nsq\Nsq;
 use Hyperf\RpcClient\Exception\RequestException;
 use Hyperf\RpcClient\ServiceClient;
 use Hyperf\Di\Container;
+use LoyaltyLu\TccTransaction\NsqProducer;
 use LoyaltyLu\TccTransaction\State;
 use LoyaltyLu\TccTransaction\TccTransaction;
 
@@ -51,15 +52,12 @@ class ServiceClientAspect extends AbstractAspect
         $result = self::guessBelongsToRelation();
         $servers = CompensableAnnotationAspect::get($result['class']);
         if ($servers && count($servers->slave) > 0) {
-            #如果是TCC事务注解,且子服务不为空，触发Tcc事务
             $tcc_method = array_search($result['function'], $servers->master);
             if ($tcc_method == 'tryMethod') {
                 $params = $proceedingJoinPoint->getArguments()[1][0];
-                $tid = $this->state->initStatus($servers, $params);#初始化事务状态
+                $tid = $this->state->initStatus($servers, $params);
                 #放入nsql队列
-                $nsq = make(Nsq::class);
-                $msg = json_encode(['tid' => $tid, 'info' => $proceedingJoinPoint, 'id' => 1]);
-                $nsq->publish("tcc-transaction", $msg, 5);
+                NsqProducer::sendQueue($tid,$proceedingJoinPoint,'tcc-transaction');
                 return $this->tccTransaction->send($proceedingJoinPoint, $servers, $tcc_method, $tid, $params);
             }
         }

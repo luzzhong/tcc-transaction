@@ -4,14 +4,11 @@
 namespace LoyaltyLu\TccTransaction;
 
 use Hyperf\Di\Annotation\Inject;
-use Hyperf\Nsq\Nsq;
-use LoyaltyLu\TccTransaction\Exception\TccTransactionException;
 use Hyperf\Utils\ApplicationContext;
 use Hyperf\Utils\Exception\ParallelExecutionException;
 use Hyperf\Utils\Parallel;
 use Hyperf\Di\Container;
 use Hyperf\Utils\Coroutine;
-use Throwable;
 
 class TccTransaction
 {
@@ -21,25 +18,9 @@ class TccTransaction
      */
     protected $state;
 
-    /**
-     * 开始事务
-     * @param $proceedingJoinPoint
-     * @param $servers
-     * @param $tcc_method
-     * @param $tid
-     * @param $params
-     * @param int $flag
-     * @return array
-     * @throws Throwable
-     */
     public function send($proceedingJoinPoint, $servers, $tcc_method, $tid, $params, $flag = 0)
     {
-        if ($flag) {
-            $nsq = make(Nsq::class);
-            $msg = json_encode(['tid' => $tid, 'info' => $proceedingJoinPoint]);
-            $nsq->publish("tcc-transaction", $msg, 5);
-        }
-
+        if ($flag) NsqProducer::sendQueue($tid, $proceedingJoinPoint, 'tcc-transaction');
         $this->state->upAllTccStatus($tid, $tcc_method, 'normal', $params);
         $parallel = new Parallel();
         if ($tcc_method == 'tryMethod') {
@@ -63,7 +44,7 @@ class TccTransaction
         }
         try {
             $results = $parallel->wait();
-            $params[$tcc_method] = $results;#记录每阶段成功返回值传递到下一阶段
+            $params[$tcc_method] = $results;
             $this->state->upAllTccStatus($tid, $tcc_method, 'success', $params);
             if ($tcc_method == 'tryMethod') {
                 $results = $this->send($proceedingJoinPoint, $servers, 'confirmMethod', $tid, $params);
@@ -75,26 +56,16 @@ class TccTransaction
 
     }
 
-    /**
-     * 尝试回滚
-     * @param $tcc_method
-     * @param $proceedingJoinPoint
-     * @param $servers
-     * @param $tid
-     * @param $params
-     * @return array
-     */
     public function errorTransction($exception, $tcc_method, $proceedingJoinPoint, $servers, $tid, $params)
     {
         switch ($tcc_method) {
             case 'tryMethod':
-                return $this->send($proceedingJoinPoint, $servers, 'cancelMethod', $tid, $params); #tryMethod阶段失败直接回滚
-            // TODO: 更改事务状态
+                return $this->send($proceedingJoinPoint, $servers, 'cancelMethod', $tid, $params);
             case 'cancelMethod':
                 if ($this->state->upTccStatus($tid, $tcc_method, 'retried_cancel_count')) {
-                    return $this->send($proceedingJoinPoint, $servers, 'cancelMethod', $tid, $params); #tryMethod阶段失败直接回滚
+                    return $this->send($proceedingJoinPoint, $servers, 'cancelMethod', $tid, $params);
                 }
-                return ['status' => 0, 'msg' => '失败'];
+                return ['status' => 0, 'msg' => '回滚失败'];
             case 'confirmMethod':
                 if ($this->state->upTccStatus($tid, $tcc_method, 'retried_confirm_count')) {
                     return $this->send($proceedingJoinPoint, $servers, 'confirmMethod', $tid, $params);
