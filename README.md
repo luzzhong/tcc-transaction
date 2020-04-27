@@ -32,12 +32,7 @@ composer 中加入
 "require": {
     "loyaltylu/tcc-transaction":"dev-master",
  },
- "repositories": {
-    "loyaltylu":{
-            "type": "path",
-            "url": "../loyaltylu/*" #gitclone本地路径
-    },
-}
+ 
 ```
 * 引用注解：
 
