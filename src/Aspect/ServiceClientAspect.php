@@ -56,7 +56,6 @@ class ServiceClientAspect extends AbstractAspect
             if ($tcc_method == 'tryMethod') {
                 $params = $proceedingJoinPoint->getArguments()[1][0];
                 $tid = $this->state->initStatus($servers, $params);
-                #放入nsql队列
                 NsqProducer::sendQueue($tid,$proceedingJoinPoint,'tcc-transaction');
                 return $this->tccTransaction->send($proceedingJoinPoint, $servers, $tcc_method, $tid, $params);
             }

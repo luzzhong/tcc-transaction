@@ -20,7 +20,9 @@ class TccTransaction
 
     public function send($proceedingJoinPoint, $servers, $tcc_method, $tid, $params, $flag = 0)
     {
-        if ($flag) NsqProducer::sendQueue($tid, $proceedingJoinPoint, 'tcc-transaction');
+        if ($flag) {
+            NsqProducer::sendQueue($tid, $proceedingJoinPoint, 'tcc-transaction');
+        }
         $this->state->upAllTccStatus($tid, $tcc_method, 'normal', $params);
         $parallel = new Parallel();
         if ($tcc_method == 'tryMethod') {
