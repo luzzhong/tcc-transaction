@@ -98,7 +98,7 @@ class PayService implements PayServiceInterface
 {
 public function creditAccountTcc($input)
     {
-        throw new \Exception('111');
+        throw new \Exception('msg');
         
     }
 }
