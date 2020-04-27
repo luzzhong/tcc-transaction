@@ -86,6 +86,23 @@ composer 中加入
     
     * cancelMethod： cancel阶段方法
 
+#### 服务提供者
+* 各个服务异常抛出使用 `throw`抛出即可
+
+```
+/**
+ * Class CalculatorService.
+ * @RpcService(name="PayService", protocol="jsonrpc-http", server="jsonrpc-http", publishTo="consul")
+ */
+class PayService implements PayServiceInterface
+{
+public function creditAccountTcc($input)
+    {
+        throw new \Exception('111');
+        
+    }
+}
+```
 
 
 项目正在完善中，欢迎大家提出宝贵意见和建议
