@@ -53,12 +53,13 @@ class TccTransaction
             }
             return $results;
         } catch (ParallelExecutionException $exception) {
-            return $this->errorTransction($exception, $tcc_method, $proceedingJoinPoint, $servers, $tid, $params);
+            $this->state->upAllTccStatus($tid, $tcc_method, 'fail', $params);
+            return $this->errorTransction($tcc_method, $proceedingJoinPoint, $servers, $tid, $params);
         }
 
     }
 
-    public function errorTransction($exception, $tcc_method, $proceedingJoinPoint, $servers, $tid, $params)
+    public function errorTransction($tcc_method, $proceedingJoinPoint, $servers, $tid, $params)
     {
         switch ($tcc_method) {
             case 'tryMethod':
