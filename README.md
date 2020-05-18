@@ -1,5 +1,5 @@
 # tcc-transaction
-基于Hyperf的分布式事务,开始事务后如果出现异常默认会重试1次，默认事务超时时间5s(超时时间要大于consumers配置wait_timeout)，超过5s后事务将被回收，执行补偿机制，补偿机制会默认重试1次上次执行异常服务，需要各个服务提供者的方法处理好幂等。
+基于Hyperf的分布式事务,开始事务后如果出现异常默认会重试1次，默认事务回收检测时间为5s(超时时间要大于consumers配置wait_timeout最大响应时间)，超过最大检测时间后事务将被回收，事务进入补偿阶段，补偿机制会默认重试1次上次执行异常服务，需要各个服务提供者的方法处理好幂等等事项
 
 Tcc注意事项:
 *   并发控制
@@ -29,9 +29,7 @@ TODO：
 
 #### 使用方法：
 
-组件尚在完善中，感兴趣的小伙伴可以先使用本地加载
-
-`git clone https://github.com/LoyaltyLu/tcc-transaction.git`
+composer require loyaltylu/tcc-transaction
 
 
 composer 中加入
