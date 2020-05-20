@@ -13,6 +13,6 @@ class NsqProducer
         $nsq = make(Nsq::class);
         $msg = json_encode(['tid' => $tid, 'info' => $proceedingJoinPoint, 'id' => 1]);
         /** @var $nsq Nsq **/
-        return $nsq->publish($topic, $msg, config('nsq_detection_time',5));
+        return $nsq->publish($topic, $msg, config('transaction.nsq_detection_time',5));
     }
 }
