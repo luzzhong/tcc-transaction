@@ -30,9 +30,7 @@
     "extra": {
         "branch-alias": {},
         "hyperf": {
-            "config": [
-                "LoyaltyLu\\TccTransaction\\ConfigProvider"
-            ]
+            "config": "LoyaltyLu\\TccTransaction\\ConfigProvider"
         }
     },
     "scripts": {

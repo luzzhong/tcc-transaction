@@ -19,6 +19,14 @@ class ConfigProvider
         return [
             'listeners' => [
             ],
+            'publish' => [
+                [
+                    'id' => 'config',
+                    'description' => 'The config for transaction.',
+                    'source' => __DIR__ . '/../publish/transaction.php',
+                    'destination' => BASE_PATH . '/config/autoload/transaction.php',
+                ],
+            ],
             'annotations' => [
                 'scan' => [
                     'paths' => [

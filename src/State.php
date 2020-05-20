@@ -37,7 +37,7 @@ class State
             'retried_confirm_count' => self::RETRIED_CONFIRM_COUNT,
             'retried_cancel_nsq_count' => self::RETRIED_CANCEL_COUNT,
             'retried_confirm_nsq_count' => self::RETRIED_CONFIRM_COUNT,
-            'retried_max_count' => self::RETRIED_MAX_COUNT,
+            'retried_max_count' => config('retried_max_count',self::RETRIED_MAX_COUNT),
             'create_time' => time(),
             'last_update_time' => time(),
         ];
