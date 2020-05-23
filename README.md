@@ -10,7 +10,9 @@
 
 #### 使用方法：
 
-composer require loyaltylu/tcc-transaction
+`composer require loyaltylu/tcc-transaction`
+`php bin/hyperf.php vendor:publish loyaltylu/tcc-transaction`
+
 
 * 引用注解：
 
