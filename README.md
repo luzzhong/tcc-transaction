@@ -8,17 +8,6 @@
 *   防悬挂控制
 *   幂等控制
 
-
-[nsq](https://nsq.io/overview/quick_start.html)
-
->   不同服务尽量配置不同nsq，避免数据混淆消费失败
-
-`composer require hyperf/nsq`
-
-
-`php bin/hyperf.php vendor:publish hyperf/nsq`
-
-
 #### 使用方法：
 
 composer require loyaltylu/tcc-transaction
@@ -107,7 +96,7 @@ public function creditAccountTcc($input)
 * 事务节点信息、事务参数、各个阶段返回值皆保存在redis需要对reids进行持久化设置，避免数据丢失
 * 为防止服务异常使用了消息队列对事务进行回查，如果系统在执行中宕机或其他异常导致服务不可用则消息队列会对异常队列进行补偿，消息队列目前只支持NSQ，也需要进行持久化，避免数据丢失
 * 消息对列采用延时队列，不会立即对事务进行回查，回查时间可以在配置文件中设置，设置回查时间不应小于各个服务的最大响应时间，避免出现异常
-* 
+
 
 
 #### TODO：
