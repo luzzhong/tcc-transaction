@@ -1,22 +1,14 @@
 # tcc-transaction
-基于Hyperf的分布式事务,开始事务后如果出现异常默认会重试1次，默认事务回收检测时间为5s(超时时间要大于consumers配置wait_timeout最大响应时间)，超过最大检测时间后事务将被回收，事务进入补偿阶段，补偿机制会默认重试1次上次执行异常服务，需要各个服务提供者的方法处理好幂等等事项
+基于Hyperf的TCC分布式事务
 
-Tcc注意事项:
+
+#### Tcc注意事项:
 *   并发控制
 *   允许空回滚
 *   防悬挂控制
 *   幂等控制
 
 
-TODO：
-
-实现事务回滚失败通知开发者（通知方式待定）
-
-优化各个方法，减少冗余
-
-提取参数，发布到配置文件
-
-#### 所需要的服务：
 [nsq](https://nsq.io/overview/quick_start.html)
 
 >   不同服务尽量配置不同nsq，避免数据混淆消费失败
@@ -31,19 +23,12 @@ TODO：
 
 composer require loyaltylu/tcc-transaction
 
-
-composer 中加入
-```
-"require": {
-    "loyaltylu/tcc-transaction":"dev-master",
- },
- 
-```
 * 引用注解：
 
 ```php
     use LoyaltyLu\TccTransaction\Annotation\Compensable;
 ```
+
 * 在需要调用分布式事务的方法上加入注解
 
 ```php
@@ -72,9 +57,9 @@ composer 中加入
 ```
 * 注解说明：
 
-    * master：主业务服务（单个）
+    * master：主业务服务（事务发起方）
 
-    * slave：从业务服务（多个）
+    * slave：从业务服务（事务参与方）（多个）
 
     * services：服务接口
     
@@ -84,10 +69,21 @@ composer 中加入
     
     * cancelMethod： cancel阶段方法
 
-#### 服务提供者
-* 各个服务异常抛出使用 `throw`抛出即可
 
+* 事务调用
+
+    只需要调用主业务服务try阶段方法，事务管理器会根据各个服务返回决定执行confirm阶段还是cancel阶段
+```php
+     $input = $this->request->input('id');
+     return $this->service->creditOrderTcc($input);
 ```
+* 事务传参
+    事务各个阶段如果需要传参只需要对主业务服务try阶段方法传入参数，事务管理器会将try阶段参数代入各个阶段方法，同时也会将try阶段返回值一并代入下个阶段
+
+* 事务参与者应响应失败需要使用`throw`抛出
+        目前不支持自定义失败异常，后期会考虑
+
+```php
 /**
  * Class CalculatorService.
  * @RpcService(name="PayService", protocol="jsonrpc-http", server="jsonrpc-http", publishTo="consul")
@@ -101,6 +97,23 @@ public function creditAccountTcc($input)
     }
 }
 ```
+#### 下面以下单为例的【正常】流程：
+*   1、将TCC信息保存起来，状态为：待处理
+*   2、预处理阶段（Try），并将处理成功的信息保存起来，以便后续【提交/回滚】使用。
+*   3、根据预处理的结果，决定是提交还是回滚。
+*   4、如果全部处理成功，则修改1中保存起来的数据的状态：处理成功；
+*   5、结束处理，并返回
+#### 注意事项
+* 事务节点信息、事务参数、各个阶段返回值皆保存在redis需要对reids进行持久化设置，避免数据丢失
+* 为防止服务异常使用了消息队列对事务进行回查，如果系统在执行中宕机或其他异常导致服务不可用则消息队列会对异常队列进行补偿，消息队列目前只支持NSQ，也需要进行持久化，避免数据丢失
+* 消息对列采用延时队列，不会立即对事务进行回查，回查时间可以在配置文件中设置，设置回查时间不应小于各个服务的最大响应时间，避免出现异常
+* 
+
+
+#### TODO：
+
+* 实现事务回滚失败通知开发者（通知方式待定）
+* 优化消息队列模块，增加队列选择
 
 
 项目正在完善中，欢迎大家提出宝贵意见和建议，您的star是我们前进的动力~
