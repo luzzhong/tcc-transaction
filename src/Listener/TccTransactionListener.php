@@ -15,6 +15,7 @@ use Hyperf\Redis\Redis;
 use LoyaltyLu\TccTransaction\NsqProducer;
 use LoyaltyLu\TccTransaction\State;
 use LoyaltyLu\TccTransaction\TccTransaction;
+use LoyaltyLu\TccTransaction\Report\ErrorReport;
 
 /**
  * @Consumer(
@@ -101,10 +102,12 @@ class TccTransactionListener extends AbstractConsumer
      */
     private function sendReport($title, $tid, $tccMethod, $status)
     {
+        var_dump("yichangbaojng ");
         $content = "## {$title} \n";
         $content .= "#### 事务: {$tid} \n";
         $content .= "#### 阶段: {$tccMethod} \n";
         $content .= "#### 执行状态: {$status} \n";
+        var_dump($this->container->get(ErrorReport::class));
         $this->container->get(ErrorReport::class)->send($title, $content);
     }
 }
