@@ -34,6 +34,9 @@ class ConfigProvider
                     ],
                 ],
             ],
+            'dependencies' => [
+                \LoyaltyLu\TccTransaction\Report\ErrorReport::class => \LoyaltyLu\TccTransaction\Report\ErrorReportDingding::class
+            ],
         ];
     }
 }

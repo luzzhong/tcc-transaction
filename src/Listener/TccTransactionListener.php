@@ -71,6 +71,8 @@ class TccTransactionListener extends AbstractConsumer
                     #TODO:: 通知措施
                     $this->redis->hDel('Tcc', $info->tid);
                     $this->redis->hSet('TccError', $info->tid, $tccInfo);
+                    //异常通知
+                    $this->sendReport("事务异常: 回滚失败", $info->tid, $data['tcc_method'], $data['status']);
                 }
             } elseif ($data['tcc_method'] == 'confirmMethod') {
                 if ($this->state->upTccStatus($info->tid, 'confirmMethod', 'retried_confirm_nsq_count')) {
@@ -88,5 +90,21 @@ class TccTransactionListener extends AbstractConsumer
         $msg = sprintf('事务:%s,%s阶段,执行状态:%s.', $info->tid, $data['tcc_method'], $data['status']);
         $this->logger->debug($msg);
         return Result::ACK;
+    }
+
+    /**
+     * 发送通知
+     * @param $title  标题
+     * @param $tid    事务标识
+     * @param $tccMethod    事务阶段
+     * @param $status   事务状态
+     */
+    private function sendReport($title, $tid, $tccMethod, $status)
+    {
+        $content = "## {$title} \n";
+        $content .= "#### 事务: {$tid} \n";
+        $content .= "#### 阶段: {$tccMethod} \n";
+        $content .= "#### 执行状态: {$status} \n";
+        $this->container->get(ErrorReport::class)->send($title, $content);
     }
 }

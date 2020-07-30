@@ -12,4 +12,7 @@ declare(strict_types=1);
 return [
     'retried_max_count' => 1,//最多次数
     'nsq_detection_time'=>5,//nsql检测补偿事务时间
+    'dingtalk' => [
+        'access_token' => ''//钉钉群机器人hook地址
+    ]
 ];
