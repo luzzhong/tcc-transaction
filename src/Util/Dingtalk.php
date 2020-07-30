@@ -14,7 +14,7 @@ use Hyperf\Guzzle\ClientFactory;
  */
 class Dingtalk
 {
-    private $dingtalkUrl;
+    private $dingtalkHookUrl;
 
     private $config;
 
