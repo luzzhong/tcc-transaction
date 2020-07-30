@@ -15,6 +15,7 @@ use Hyperf\Redis\Redis;
 use LoyaltyLu\TccTransaction\NsqProducer;
 use LoyaltyLu\TccTransaction\State;
 use LoyaltyLu\TccTransaction\TccTransaction;
+use LoyaltyLu\TccTransaction\Report\ErrorReport;
 
 /**
  * @Consumer(
