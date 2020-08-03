@@ -11,13 +11,17 @@ class ErrorReportMail implements ErrorReport
     /**
      * 发送消息
      * @param $title
-     * @param $msg
+     * @param $msgs
      * @return mixed
      */
-    public function send($title, $msg)
+    public function send($title, $msgs)
     {
-        var_dump($title. "--". $msg);
+        $content = "<h1> {$title} </h1>";
+        foreach ($msgs as $msg) {
+            $content .= " {$msg} <br/>";
+        }
+        var_dump($title. "--". $content);
         $mailUtil = make(Mailer::class);
-        return $mailUtil->send($title, $msg);
+        return $mailUtil->sendHtml($title, $content);
     }
 }

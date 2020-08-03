@@ -9,6 +9,12 @@ use Hyperf\Contract\ConfigInterface;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+/**
+ * 邮件发送工具类
+ *
+ * Class Mailer
+ * @package LoyaltyLu\TccTransaction\Util
+ */
 class Mailer
 {
     private $config;
@@ -19,7 +25,13 @@ class Mailer
         $this->mailConfig = config('transaction.mailer');
     }
 
-    public function send($title, $content)
+    /**
+     * 发送html内容的邮件
+     * @param $title
+     * @param $content  邮件内容，支持html
+     * @return bool
+     */
+    public function sendHtml($title, $content)
     {
         if (!$this->checkConfig()) {
             var_dump("配置检查失败");
@@ -56,6 +68,10 @@ class Mailer
         }
     }
 
+    /**
+     * 检查配置是否完整
+     * @return bool
+     */
     private function checkConfig()
     {
         if (!empty($this->config['host'])

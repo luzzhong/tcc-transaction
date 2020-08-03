@@ -14,8 +14,8 @@ interface ErrorReport
     /**
      * 发送消息
      * @param $title
-     * @param $msg
+     * @param $msgs
      * @return mixed
      */
-    public function send($title, $msg);
+    public function send($title, $msgs);
 }
