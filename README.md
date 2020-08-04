@@ -12,6 +12,8 @@
 *   防悬挂控制
 *   幂等控制
 
+###### 目前支持钉钉以及邮件推送事务失败通知，感谢 <a href="https://github.com/lizhanfei" target='_blank'>@lizhanfei</a>
+
 #### 使用方法：
 
 `composer require loyaltylu/tcc-transaction`
@@ -109,6 +111,7 @@ public function creditAccountTcc($input)
 ```
 
 
+
 #### 下面以下单为例的【正常】流程：
 
 *   1、将TCC信息保存起来，状态为：待处理
@@ -131,7 +134,6 @@ public function creditAccountTcc($input)
 
 #### TODO：
 
-* 实现事务回滚失败通知开发者（通知方式待定）
 * 优化消息队列模块，增加队列选择
 
 
