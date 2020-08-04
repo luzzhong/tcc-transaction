@@ -52,7 +52,7 @@ class Dingtalk
         $requestData['at']['atMobiles'] = $atUser;
         $requestData['at']['isAtAll'] = $isAtAll;
         try {
-            $response = $client->post($this->dingtalkConfig['access_token'], ['json' => $requestData]);
+            $response = $client->post($this->dingtalkHookUrl, ['json' => $requestData]);
             return $response;
         } catch (\Exception $err) {
             return false;
