@@ -17,5 +17,5 @@ interface ErrorReport
      * @param $msgs
      * @return mixed
      */
-    public function send($title, $msgs);
+    public function send(string $title, array $msgs);
 }

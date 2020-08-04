@@ -8,20 +8,30 @@ use LoyaltyLu\TccTransaction\Util\Mailer;
 
 class ErrorReportMail implements ErrorReport
 {
+    private $config;
+
+    public function __construct()
+    {
+        $this->config = config('transaction.mailer');
+    }
+
     /**
      * 发送消息
      * @param $title
      * @param $msgs
      * @return mixed
      */
-    public function send($title, $msgs)
+    public function send(string $title, array $msgs)
     {
-        $content = "<h1> {$title} </h1>";
-        foreach ($msgs as $msg) {
-            $content .= " {$msg} <br/>";
+        if (true === $this->config['open']) {
+            $content = "<h1> {$title} </h1>";
+            foreach ($msgs as $msg) {
+                $content .= " {$msg} <br/>";
+            }
+            $mailUtil = make(Mailer::class);
+            $mailUtil->setConfig($this->config);
+            return $mailUtil->sendHtml($title, $content);
         }
-        var_dump($title. "--". $content);
-        $mailUtil = make(Mailer::class);
-        return $mailUtil->sendHtml($title, $content);
+        return false;
     }
 }

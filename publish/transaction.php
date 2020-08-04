@@ -13,18 +13,18 @@ return [
     'retried_max_count' => 1,//最多次数
     'nsq_detection_time' => 5,//nsql检测补偿事务时间
     'dingtalk' => [
-        'access_token' => ''//钉钉群机器人hook地址
+        'open' => false,//是否开启钉钉报警
+        'access_token' => 'https://oapi.dingtalk.com/robot/send?access_token=***********************'//钉钉群机器人hook地址，仅支持一个
     ],
     'mailer' => [
-        'host' => '',//邮箱主机
-        'username' => '',//邮箱用户名
-        'password' => '', //邮箱密码
-        'port'=>'',//邮箱主机端口
-
-        'from' => '',//邮件来源声明
-        'from_sitetitle' => '',//来源网站title
+        'open' => false,//是否开启邮箱报警
+        'host' => 'smtp.**.com',//邮箱主机
+        'username' => '*******@163.com',//邮箱用户名
+        'password' => '******', //邮箱密码
+        'port' => '465',//邮箱主机端口
+        'from' => '***@163.com',//邮件来源地址声明
         'mail_to' => [
-            ''
-        ],//接收邮件地址
+            '*****@163.com'
+        ],//接收邮件地址，支持多个地址
     ]
 ];

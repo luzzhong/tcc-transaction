@@ -14,20 +14,31 @@ use LoyaltyLu\TccTransaction\Util\Dingtalk;
  */
 class ErrorReportDingding implements ErrorReport
 {
+    private $config;
+
+    public function __construct()
+    {
+        $this->config = config('transaction.dingtalk');
+    }
+
     /**
      * 发送消息
      * @param $title
      * @param $msgs
      * @return mixed
      */
-    public function send($title, $msgs)
+    public function send(string $title, array $msgs)
     {
-        //组装数据
-        $content = "## {$title} \n";
-        foreach ($msgs as $msg) {
-            $content .= "### {$msg} \n";
+        if (true === $this->config['open']) {
+            //组装数据
+            $content = "## {$title} \n";
+            foreach ($msgs as $msg) {
+                $content .= "### {$msg} \n";
+            }
+            $dingUtil = make(Dingtalk::class);
+            $dingUtil->setHookUrl($this->config['access_token']);
+            return $dingUtil->sendMarkDown($title, $content);
         }
-        $dingUtil = make(Dingtalk::class);
-        return $dingUtil->sendMarkDown($title, $content);
+        return false;
     }
 }

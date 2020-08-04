@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace LoyaltyLu\TccTransaction\Report;
 
-use LoyaltyLu\TccTransaction\Util\Dingtalk;
-use LoyaltyLu\TccTransaction\Util\Mailer;
+use Hyperf\Utils\Exception\ParallelExecutionException;
+use Hyperf\Utils\Parallel;
+use function foo\func;
 
 /**
  * 钉钉和邮件发送异常报告
@@ -20,28 +21,22 @@ class ErrorReportDingdingAndMail implements ErrorReport
      * @param $msgs
      * @return mixed
      */
-    public function send($title, $msgs)
+    public function send(string $title, array $msgs)
     {
-        /**
-         * 钉钉组装数据，发送
-         */
-        $content = "## {$title} \n";
-        foreach ($msgs as $msg) {
-            $content .= "### {$msg} \n";
+        $parallel = new Parallel();
+        $parallel->add(function () use ($title, $msgs) {
+            $dingding = make(ErrorReportDingding::class);
+            $dingding->send($title, $msgs);
+        });
+        $parallel->add(function () use ($title, $msgs) {
+            $mail = make(ErrorReportMail::class);
+            $mail->send($title, $msgs);
+        });
+        try {
+            $parallel->wait();
+            return true;
+        } catch (ParallelExecutionException $exception) {
+            return false;
         }
-        $dingUtil = make(Dingtalk::class);
-        $dingUtil->sendMarkDown($title, $content);
-        /**
-         * 邮件组装数据，发送
-         */
-        $content = "<h1> {$title} </h1>";
-        foreach ($msgs as $msg) {
-            $content .= " {$msg} <br/>";
-        }
-        var_dump($title. "--". $content);
-        $mailUtil = make(Mailer::class);
-        $mailUtil->sendHtml($title, $content);
-
-        return true;
     }
 }

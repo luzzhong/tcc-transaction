@@ -19,10 +19,13 @@ class Mailer
 {
     private $config;
 
-    public function __construct(ConfigInterface $config)
+    /**
+     * 设置配置信息
+     * @param array $config
+     */
+    public function setConfig(array $config)
     {
         $this->config = $config;
-        $this->mailConfig = config('transaction.mailer');
     }
 
     /**
@@ -34,29 +37,27 @@ class Mailer
     public function sendHtml($title, $content)
     {
         if (!$this->checkConfig()) {
-            var_dump("配置检查失败");
             return false;
         }
-        var_dump("send mail");
+
         $mail = new PHPMailer(true);
         try {
             //Server settings
             $mail->SMTPDebug = 0;
             $mail->isSMTP();
+            $mail->CharSet = 'UTF-8';
             $mail->Host = $this->config['host'];
             $mail->SMTPAuth = true;
             $mail->Username = $this->config['username'];
             $mail->Password = $this->config['password'];
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
             $mail->Port = $this->config['port'];
 
-            //Recipients
             $mail->setFrom($this->config['from']);
             foreach ($this->config['mail_to'] as $oneTarget) {
                 $mail->addAddress($oneTarget);     //添加发送目标
             }
 
-            // Content
             $mail->isHTML(true);                                  // Set email format to HTML
             $mail->Subject = $title;
             $mail->Body = $content;

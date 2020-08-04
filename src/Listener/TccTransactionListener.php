@@ -102,13 +102,10 @@ class TccTransactionListener extends AbstractConsumer
      */
     private function sendReport($title, $tid, $tccMethod, $status)
     {
-        var_dump("yichangbaojng ");
-
         $content = [];
         $content[] = "事务: {$tid}";
         $content[] = "阶段: {$tccMethod}";
         $content[] = "执行状态: {$status}";
-        var_dump($this->container->get(ErrorReport::class));
         $this->container->get(ErrorReport::class)->send($title, $content);
     }
 }
