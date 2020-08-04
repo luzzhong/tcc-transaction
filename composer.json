@@ -9,7 +9,8 @@
     "require": {
         "hyperf/nsq": "~1.1.0",
         "hyperf/snowflake": "~1.1.0",
-        "hyperf/logger": "~1.1.0"
+        "hyperf/logger": "~1.1.0",
+        "phpmailer/phpmailer": "~6.1"
     },
     "replace":{
         "loyaltylu/transaction": "1.1.0"

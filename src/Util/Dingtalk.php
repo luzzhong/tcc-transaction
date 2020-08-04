@@ -16,18 +16,23 @@ class Dingtalk
 {
     private $dingtalkHookUrl;
 
-    private $config;
-
     /**
      * @var \Hyperf\Guzzle\ClientFactory
      */
     private $clientFactory;
 
-    public function __construct(ConfigInterface $config, ClientFactory $clientFactory)
+    public function __construct(ClientFactory $clientFactory)
     {
-        $this->config = $config;
-        $this->dingtalkHookUrl = config('transaction.dingtalk.access_token');
         $this->clientFactory = $clientFactory;
+    }
+
+    /**
+     * 设置hook url信息
+     * @param string $hookUrl
+     */
+    public function setHookUrl(string $hookUrl)
+    {
+        $this->dingtalkHookUrl = $hookUrl;
     }
 
     public function sendText($content, $atUser = [], $isAtAll = false)
@@ -47,7 +52,7 @@ class Dingtalk
         $requestData['at']['atMobiles'] = $atUser;
         $requestData['at']['isAtAll'] = $isAtAll;
         try {
-            $response = $client->post($this->dingtalkConfig['access_token'], ['json' => $requestData]);
+            $response = $client->post($this->dingtalkHookUrl, ['json' => $requestData]);
             return $response;
         } catch (\Exception $err) {
             return false;
