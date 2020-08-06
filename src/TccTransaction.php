@@ -4,11 +4,12 @@
 namespace LoyaltyLu\TccTransaction;
 
 use Hyperf\Di\Annotation\Inject;
+use Hyperf\Redis\Redis;
 use Hyperf\Utils\ApplicationContext;
 use Hyperf\Utils\Exception\ParallelExecutionException;
 use Hyperf\Utils\Parallel;
-use Hyperf\Di\Container;
-use Hyperf\Utils\Coroutine;
+use LoyaltyLu\TccTransaction\Report\ErrorReport;
+use Psr\Container\ContainerInterface;
 
 class TccTransaction
 {
@@ -17,6 +18,16 @@ class TccTransaction
      * @var State
      */
     protected $state;
+    /**
+     * @Inject()
+     * @var ContainerInterface
+     */
+    protected $container;
+    /**
+     * @Inject()
+     * @var Redis
+     */
+    private $redis;
 
     public function send($proceedingJoinPoint, $servers, $tcc_method, $tid, $params, $flag = 0)
     {
@@ -68,6 +79,8 @@ class TccTransaction
                 if ($this->state->upTccStatus($tid, $tcc_method, 'retried_cancel_count')) {
                     return $this->send($proceedingJoinPoint, $servers, 'cancelMethod', $tid, $params);
                 }
+                //异常通知
+                $this->sendReport("事务异常: 回滚失败", $tid, 'cancelMethod', 'fail');
                 return ['status' => 0, 'msg' => '回滚失败'];
             case 'confirmMethod':
                 if ($this->state->upTccStatus($tid, $tcc_method, 'retried_confirm_count')) {
@@ -75,7 +88,26 @@ class TccTransaction
                 }
                 return $this->send($proceedingJoinPoint, $servers, 'cancelMethod', $tid, $params);
         }
-
     }
 
+    /**
+     * 发送通知
+     * @param $title  标题
+     * @param $tid    事务标识
+     * @param $tccMethod    事务阶段
+     * @param $status   事务状态
+     */
+    private function sendReport($title, $tid, $tccMethod, $status)
+    {
+        $key = "tcc:canclefail:report:" . $tid;
+        if (!$this->redis->get($key)) {
+            $content = [];
+            $content[] = "事务: {$tid}";
+            $content[] = "阶段: {$tccMethod}";
+            $content[] = "执行状态: {$status}";
+            if ($this->container->get(ErrorReport::class)->send($title, $content)) {
+                $this->redis->set($key, 1, 300);
+            }
+        }
+    }
 }

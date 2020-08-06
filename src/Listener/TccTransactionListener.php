@@ -58,7 +58,8 @@ class TccTransactionListener extends AbstractConsumer
         $tccInfo = $this->redis->hget("Tcc", $info->tid);
         $data = json_decode($tccInfo, true);
 
-        if ($data['last_update_time'] + 5 > time()) {
+        $timeout = config('transaction.nsq_detection_time',5);
+        if ($data['last_update_time'] + $timeout > time()) {
             NsqProducer::sendQueue($info->tid, $info->info, 'tcc-transaction');
             return Result::ACK;
         }
@@ -69,7 +70,6 @@ class TccTransactionListener extends AbstractConsumer
                 if ($this->state->upTccStatus($info->tid, 'cancelMethod', 'retried_cancel_nsq_count')) {
                     $this->tcc->send($info->info, (object)$data['services'], 'cancelMethod', $info->tid, $data['content'], 1);
                 } else {
-                    #TODO:: 通知措施
                     $this->redis->hDel('Tcc', $info->tid);
                     $this->redis->hSet('TccError', $info->tid, $tccInfo);
                     //异常通知
@@ -102,10 +102,15 @@ class TccTransactionListener extends AbstractConsumer
      */
     private function sendReport($title, $tid, $tccMethod, $status)
     {
-        $content = [];
-        $content[] = "事务: {$tid}";
-        $content[] = "阶段: {$tccMethod}";
-        $content[] = "执行状态: {$status}";
-        $this->container->get(ErrorReport::class)->send($title, $content);
+        $key = "tcc:canclefail:report:" . $tid;
+        if (!$this->redis->get($key)) {
+            $content = [];
+            $content[] = "事务: {$tid}";
+            $content[] = "阶段: {$tccMethod}";
+            $content[] = "执行状态: {$status}";
+            if ($this->container->get(ErrorReport::class)->send($title, $content)) {
+                $this->redis->set($key, 1, 300);
+            }
+        }
     }
 }

@@ -6,7 +6,7 @@ namespace LoyaltyLu\TccTransaction\Report;
 
 use Hyperf\Utils\Exception\ParallelExecutionException;
 use Hyperf\Utils\Parallel;
-use function foo\func;
+use Exception;
 
 /**
  * 钉钉和邮件发送异常报告
@@ -36,6 +36,10 @@ class ErrorReportDingdingAndMail implements ErrorReport
             $parallel->wait();
             return true;
         } catch (ParallelExecutionException $exception) {
+            echo "钉钉和邮件报警失败，错误信息：" . $exception->getMessage() . " 文件：" . $exception->getFile() . "[{$exception->getLine()}]\n";
+            return false;
+        } catch (Exception $exception) {
+            echo "钉钉和邮件报警失败，错误信息：" . $exception->getMessage() . " 文件：" . $exception->getFile() . "[{$exception->getLine()}]\n";
             return false;
         }
     }
