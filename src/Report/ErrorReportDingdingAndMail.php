@@ -7,6 +7,8 @@ namespace LoyaltyLu\TccTransaction\Report;
 use Hyperf\Utils\Exception\ParallelExecutionException;
 use Hyperf\Utils\Parallel;
 use Exception;
+use Hyperf\Contract\StdoutLoggerInterface;
+use Hyperf\Di\Annotation\Inject;
 
 /**
  * 钉钉和邮件发送异常报告
@@ -15,6 +17,12 @@ use Exception;
  */
 class ErrorReportDingdingAndMail implements ErrorReport
 {
+    /**
+     * @Inject()
+     * @var StdoutLoggerInterface
+     */
+    protected $logger;
+
     /**
      * 发送消息
      * @param $title
@@ -36,10 +44,12 @@ class ErrorReportDingdingAndMail implements ErrorReport
             $parallel->wait();
             return true;
         } catch (ParallelExecutionException $exception) {
-            echo "钉钉和邮件报警失败，错误信息：" . $exception->getMessage() . " 文件：" . $exception->getFile() . "[{$exception->getLine()}]\n";
+            $msg = "钉钉和邮件报警失败，错误信息：" . $exception->getMessage() . " 文件：" . $exception->getFile() . "[{$exception->getLine()}]\n";
+            $this->logger->error($msg);
             return false;
         } catch (Exception $exception) {
-            echo "钉钉和邮件报警失败，错误信息：" . $exception->getMessage() . " 文件：" . $exception->getFile() . "[{$exception->getLine()}]\n";
+            $msg = "钉钉和邮件报警失败，错误信息：" . $exception->getMessage() . " 文件：" . $exception->getFile() . "[{$exception->getLine()}]\n";
+            $this->logger->error($msg);
             return false;
         }
     }

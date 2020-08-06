@@ -13,9 +13,9 @@ use Hyperf\Nsq\Message;
 use Hyperf\Nsq\Result;
 use Hyperf\Redis\Redis;
 use LoyaltyLu\TccTransaction\NsqProducer;
+use LoyaltyLu\TccTransaction\Report\TccErrorReport;
 use LoyaltyLu\TccTransaction\State;
 use LoyaltyLu\TccTransaction\TccTransaction;
-use LoyaltyLu\TccTransaction\Report\ErrorReport;
 
 /**
  * @Consumer(
@@ -73,7 +73,7 @@ class TccTransactionListener extends AbstractConsumer
                     $this->redis->hDel('Tcc', $info->tid);
                     $this->redis->hSet('TccError', $info->tid, $tccInfo);
                     //异常通知
-                    $this->sendReport("事务异常: 回滚失败", $info->tid, $data['tcc_method'], $data['status']);
+                    make(TccErrorReport::class)->cancleFailReport("事务异常: 回滚失败", $info->tid, $data['tcc_method'], $data['status']);
                 }
             } elseif ($data['tcc_method'] == 'confirmMethod') {
                 if ($this->state->upTccStatus($info->tid, 'confirmMethod', 'retried_confirm_nsq_count')) {
@@ -91,26 +91,5 @@ class TccTransactionListener extends AbstractConsumer
         $msg = sprintf('事务:%s,%s阶段,执行状态:%s.', $info->tid, $data['tcc_method'], $data['status']);
         $this->logger->debug($msg);
         return Result::ACK;
-    }
-
-    /**
-     * 发送通知
-     * @param $title  标题
-     * @param $tid    事务标识
-     * @param $tccMethod    事务阶段
-     * @param $status   事务状态
-     */
-    private function sendReport($title, $tid, $tccMethod, $status)
-    {
-        $key = "tcc:canclefail:report:" . $tid;
-        if (!$this->redis->get($key)) {
-            $content = [];
-            $content[] = "事务: {$tid}";
-            $content[] = "阶段: {$tccMethod}";
-            $content[] = "执行状态: {$status}";
-            if ($this->container->get(ErrorReport::class)->send($title, $content)) {
-                $this->redis->set($key, 1, 300);
-            }
-        }
     }
 }
