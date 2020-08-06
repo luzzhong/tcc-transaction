@@ -7,6 +7,7 @@ namespace LoyaltyLu\TccTransaction\Report;
 use Hyperf\Redis\Redis;
 use Psr\Container\ContainerInterface;
 use Hyperf\Di\Annotation\Inject;
+use LoyaltyLu\TccTransaction\Util\Lock;
 
 /**
  * tcc 异常报告
@@ -22,9 +23,9 @@ class TccErrorReport
     protected $container;
     /**
      * @Inject()
-     * @var Redis
+     * @var Lock
      */
-    private $redis;
+    private $lock;
 
     /**
      * 回滚异常报警
@@ -36,13 +37,13 @@ class TccErrorReport
     public function cancleFailReport($title, $tid, $tccMethod, $status)
     {
         $key = "tcc:canclefail:report:" . $tid;
-        if (!$this->redis->get($key)) {
+        if ($this->lock->lock($key, 10)) {
             $content = [];
             $content[] = "事务: {$tid}";
             $content[] = "阶段: {$tccMethod}";
             $content[] = "执行状态: {$status}";
             if ($this->container->get(ErrorReport::class)->send($title, $content)) {
-                $this->redis->set($key, 1, 300);
+                $this->lock->unLock($key);
             }
         }
     }
