@@ -4,11 +4,12 @@
 namespace LoyaltyLu\TccTransaction;
 
 use Hyperf\Di\Annotation\Inject;
+use Hyperf\Redis\Redis;
 use Hyperf\Utils\ApplicationContext;
 use Hyperf\Utils\Exception\ParallelExecutionException;
 use Hyperf\Utils\Parallel;
-use Hyperf\Di\Container;
-use Hyperf\Utils\Coroutine;
+use LoyaltyLu\TccTransaction\Report\TccErrorReport;
+use Psr\Container\ContainerInterface;
 
 class TccTransaction
 {
@@ -17,6 +18,16 @@ class TccTransaction
      * @var State
      */
     protected $state;
+    /**
+     * @Inject()
+     * @var ContainerInterface
+     */
+    protected $container;
+    /**
+     * @Inject()
+     * @var Redis
+     */
+    private $redis;
 
     public function send($proceedingJoinPoint, $servers, $tcc_method, $tid, $params, $flag = 0)
     {
@@ -68,6 +79,8 @@ class TccTransaction
                 if ($this->state->upTccStatus($tid, $tcc_method, 'retried_cancel_count')) {
                     return $this->send($proceedingJoinPoint, $servers, 'cancelMethod', $tid, $params);
                 }
+                //异常通知
+                make(TccErrorReport::class)->cancleFailReport("事务异常: 回滚失败", $tid, 'cancelMethod', 'fail');
                 return ['status' => 0, 'msg' => '回滚失败'];
             case 'confirmMethod':
                 if ($this->state->upTccStatus($tid, $tcc_method, 'retried_confirm_count')) {
@@ -75,7 +88,5 @@ class TccTransaction
                 }
                 return $this->send($proceedingJoinPoint, $servers, 'cancelMethod', $tid, $params);
         }
-
     }
-
 }

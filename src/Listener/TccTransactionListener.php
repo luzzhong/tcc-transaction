@@ -13,9 +13,9 @@ use Hyperf\Nsq\Message;
 use Hyperf\Nsq\Result;
 use Hyperf\Redis\Redis;
 use LoyaltyLu\TccTransaction\NsqProducer;
+use LoyaltyLu\TccTransaction\Report\TccErrorReport;
 use LoyaltyLu\TccTransaction\State;
 use LoyaltyLu\TccTransaction\TccTransaction;
-use LoyaltyLu\TccTransaction\Report\ErrorReport;
 
 /**
  * @Consumer(
@@ -58,7 +58,8 @@ class TccTransactionListener extends AbstractConsumer
         $tccInfo = $this->redis->hget("Tcc", $info->tid);
         $data = json_decode($tccInfo, true);
 
-        if ($data['last_update_time'] + 5 > time()) {
+        $timeout = config('transaction.nsq_detection_time',5);
+        if ($data['last_update_time'] + $timeout > time()) {
             NsqProducer::sendQueue($info->tid, $info->info, 'tcc-transaction');
             return Result::ACK;
         }
@@ -69,11 +70,10 @@ class TccTransactionListener extends AbstractConsumer
                 if ($this->state->upTccStatus($info->tid, 'cancelMethod', 'retried_cancel_nsq_count')) {
                     $this->tcc->send($info->info, (object)$data['services'], 'cancelMethod', $info->tid, $data['content'], 1);
                 } else {
-                    #TODO:: 通知措施
                     $this->redis->hDel('Tcc', $info->tid);
                     $this->redis->hSet('TccError', $info->tid, $tccInfo);
                     //异常通知
-                    $this->sendReport("事务异常: 回滚失败", $info->tid, $data['tcc_method'], $data['status']);
+                    make(TccErrorReport::class)->cancleFailReport("事务异常: 回滚失败", $info->tid, $data['tcc_method'], $data['status']);
                 }
             } elseif ($data['tcc_method'] == 'confirmMethod') {
                 if ($this->state->upTccStatus($info->tid, 'confirmMethod', 'retried_confirm_nsq_count')) {
@@ -91,21 +91,5 @@ class TccTransactionListener extends AbstractConsumer
         $msg = sprintf('事务:%s,%s阶段,执行状态:%s.', $info->tid, $data['tcc_method'], $data['status']);
         $this->logger->debug($msg);
         return Result::ACK;
-    }
-
-    /**
-     * 发送通知
-     * @param $title  标题
-     * @param $tid    事务标识
-     * @param $tccMethod    事务阶段
-     * @param $status   事务状态
-     */
-    private function sendReport($title, $tid, $tccMethod, $status)
-    {
-        $content = [];
-        $content[] = "事务: {$tid}";
-        $content[] = "阶段: {$tccMethod}";
-        $content[] = "执行状态: {$status}";
-        $this->container->get(ErrorReport::class)->send($title, $content);
     }
 }
