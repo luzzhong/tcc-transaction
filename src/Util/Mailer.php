@@ -1,27 +1,28 @@
 <?php
 
 declare(strict_types=1);
-
+/**
+ * This is a TCC distributed transaction component.
+ * @link     https://github.com/luzzhong/tcc-transaction
+ * @document https://github.com/luzzhong/tcc-transaction/blob/master/README.md
+ * @license  https://github.com/luzzhong/tcc-transaction/blob/master/LICENSE
+ */
 namespace LoyaltyLu\TccTransaction\Util;
 
-
-use Hyperf\Contract\ConfigInterface;
-use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\PHPMailer;
 
 /**
- * 邮件发送工具类
+ * 邮件发送工具类.
  *
  * Class Mailer
- * @package LoyaltyLu\TccTransaction\Util
  */
 class Mailer
 {
     private $config;
 
     /**
-     * 设置配置信息
-     * @param array $config
+     * 设置配置信息.
      */
     public function setConfig(array $config)
     {
@@ -29,14 +30,13 @@ class Mailer
     }
 
     /**
-     * 发送html内容的邮件
+     * 发送html内容的邮件.
      * @param $title
-     * @param $content  邮件内容，支持html
-     * @return bool
+     * @param $content  // 邮件内容，支持html
      */
-    public function sendHtml($title, $content)
+    public function sendHtml($title, $content): bool
     {
-        if (!$this->checkConfig()) {
+        if (! $this->checkConfig()) {
             return false;
         }
 
@@ -70,21 +70,16 @@ class Mailer
     }
 
     /**
-     * 检查配置是否完整
-     * @return bool
+     * 检查配置是否完整.
      */
-    private function checkConfig()
+    private function checkConfig(): bool
     {
-        if (!empty($this->config['host'])
-            && !empty($this->config['username'])
-            && !empty($this->config['password'])
-            && !empty($this->config['port'])
-            && !empty($this->config['from'])
-            && !empty($this->config['mail_to'])
-            && is_array($this->config['mail_to'])) {
-            return true;
-        } else {
-            return false;
-        }
+        return ! empty($this->config['host'])
+            && ! empty($this->config['username'])
+            && ! empty($this->config['password'])
+            && ! empty($this->config['port'])
+            && ! empty($this->config['from'])
+            && ! empty($this->config['mail_to'])
+            && is_array($this->config['mail_to']);
     }
 }

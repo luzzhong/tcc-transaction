@@ -1,6 +1,12 @@
 <?php
 
-
+declare(strict_types=1);
+/**
+ * This is a TCC distributed transaction component.
+ * @link     https://github.com/luzzhong/tcc-transaction
+ * @document https://github.com/luzzhong/tcc-transaction/blob/master/README.md
+ * @license  https://github.com/luzzhong/tcc-transaction/blob/master/LICENSE
+ */
 namespace LoyaltyLu\TccTransaction;
 
 use Hyperf\Di\Annotation\Inject;
@@ -14,17 +20,19 @@ use Psr\Container\ContainerInterface;
 class TccTransaction
 {
     /**
-     * @Inject()
+     * @Inject
      * @var State
      */
     protected $state;
+
     /**
-     * @Inject()
+     * @Inject
      * @var ContainerInterface
      */
     protected $container;
+
     /**
-     * @Inject()
+     * @Inject
      * @var Redis
      */
     private $redis;
@@ -36,7 +44,7 @@ class TccTransaction
         }
         $this->state->upAllTccStatus($tid, $tcc_method, 'normal', $params);
         $parallel = new Parallel();
-        if ($tcc_method == 'tryMethod') {
+        if ($tcc_method === 'tryMethod') {
             $parallel->add(function () use ($proceedingJoinPoint) {
                 return $proceedingJoinPoint->process();
             });
@@ -44,22 +52,22 @@ class TccTransaction
             $parallel->add(function () use ($params, $servers, $tcc_method) {
                 $container = ApplicationContext::getContainer()->get($servers->master['services']);
                 $tryMethod = $servers->master[$tcc_method];
-                return $container->$tryMethod($params);
+                return $container->{$tryMethod}($params);
             });
         }
 
         foreach ($servers->slave as $key => $value) {
-            $parallel->add(function () use ($value, $params, $tcc_method, $key) {
+            $parallel->add(function () use ($value, $params, $tcc_method) {
                 $container = ApplicationContext::getContainer()->get($value['services']);
                 $tryMethod = $value[$tcc_method];
-                return $container->$tryMethod($params);
+                return $container->{$tryMethod}($params);
             });
         }
         try {
             $results = $parallel->wait();
             $params[$tcc_method] = $results;
             $this->state->upAllTccStatus($tid, $tcc_method, 'success', $params);
-            if ($tcc_method == 'tryMethod') {
+            if ($tcc_method === 'tryMethod') {
                 $results = $this->send($proceedingJoinPoint, $servers, 'confirmMethod', $tid, $params);
             }
             return $results;
@@ -67,7 +75,6 @@ class TccTransaction
             $this->state->upAllTccStatus($tid, $tcc_method, 'fail', $params);
             return $this->errorTransction($tcc_method, $proceedingJoinPoint, $servers, $tid, $params);
         }
-
     }
 
     public function errorTransction($tcc_method, $proceedingJoinPoint, $servers, $tid, $params)
@@ -80,7 +87,7 @@ class TccTransaction
                     return $this->send($proceedingJoinPoint, $servers, 'cancelMethod', $tid, $params);
                 }
                 //异常通知
-                make(TccErrorReport::class)->cancleFailReport("事务异常: 回滚失败", $tid, 'cancelMethod', 'fail');
+                make(TccErrorReport::class)->cancleFailReport('事务异常: 回滚失败', $tid, 'cancelMethod', 'fail');
                 return ['status' => 0, 'msg' => '回滚失败'];
             case 'confirmMethod':
                 if ($this->state->upTccStatus($tid, $tcc_method, 'retried_confirm_count')) {

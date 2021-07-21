@@ -1,16 +1,19 @@
 <?php
 
 declare(strict_types=1);
-
+/**
+ * This is a TCC distributed transaction component.
+ * @link     https://github.com/luzzhong/tcc-transaction
+ * @document https://github.com/luzzhong/tcc-transaction/blob/master/README.md
+ * @license  https://github.com/luzzhong/tcc-transaction/blob/master/LICENSE
+ */
 namespace LoyaltyLu\TccTransaction\Util;
 
-use Hyperf\Contract\ConfigInterface;
 use Hyperf\Guzzle\ClientFactory;
 
 /**
  * 钉钉 发送工具类
- * Class Dingtalk
- * @package LoyaltyLu\TccTransaction\Util
+ * Class Dingtalk.
  */
 class Dingtalk
 {
@@ -27,8 +30,7 @@ class Dingtalk
     }
 
     /**
-     * 设置hook url信息
-     * @param string $hookUrl
+     * 设置hook url信息.
      */
     public function setHookUrl(string $hookUrl)
     {
@@ -52,8 +54,7 @@ class Dingtalk
         $requestData['at']['atMobiles'] = $atUser;
         $requestData['at']['isAtAll'] = $isAtAll;
         try {
-            $response = $client->post($this->dingtalkHookUrl, ['json' => $requestData]);
-            return $response;
+            return $client->post($this->dingtalkHookUrl, ['json' => $requestData]);
         } catch (\Exception $err) {
             return false;
         }
@@ -61,7 +62,7 @@ class Dingtalk
 
     /**
      * markdown 格式数据推送
-     * 钉钉支持语法
+     * 钉钉支持语法.
      *
      * 标题
      * # 一级标题
@@ -93,8 +94,10 @@ class Dingtalk
      * 2. item2
      * @param $title
      * @param $markdownContent
-     * @param array $altUser
-     * @param bool $isAltAll
+     * @param mixed $atUser
+     * @param mixed $isAtAll
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @return false|\Psr\Http\Message\ResponseInterface
      */
     public function sendMarkDown($title, $markdownContent, $atUser = [], $isAtAll = false)
     {
@@ -114,8 +117,7 @@ class Dingtalk
         $requestData['at']['atMobiles'] = $atUser;
         $requestData['at']['isAtAll'] = $isAtAll;
         try {
-            $response = $client->post($this->dingtalkHookUrl, ['json' => $requestData]);
-            return $response;
+            return $client->post($this->dingtalkHookUrl, ['json' => $requestData]);
         } catch (\Exception $err) {
             return false;
         }

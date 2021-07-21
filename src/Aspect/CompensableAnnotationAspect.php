@@ -2,21 +2,17 @@
 
 declare(strict_types=1);
 /**
- * This file is part of Hyperf.
- *
- * @link     https://www.hyperf.io
- * @document https://doc.hyperf.io
- * @contact  group@hyperf.io
- * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
+ * This is a TCC distributed transaction component.
+ * @link     https://github.com/luzzhong/tcc-transaction
+ * @document https://github.com/luzzhong/tcc-transaction/blob/master/README.md
+ * @license  https://github.com/luzzhong/tcc-transaction/blob/master/LICENSE
  */
-
 namespace LoyaltyLu\TccTransaction\Aspect;
 
 use Hyperf\Di\Annotation\Aspect;
 use Hyperf\Di\Aop\AbstractAspect;
 use Hyperf\Di\Aop\ProceedingJoinPoint;
 use Hyperf\RpcClient\ProxyFactory;
-use Hyperf\RpcClient\ServiceClient;
 use Hyperf\Utils\Traits\Container;
 use LoyaltyLu\TccTransaction\Annotation\Compensable;
 
@@ -30,7 +26,6 @@ class CompensableAnnotationAspect extends AbstractAspect
     public $annotations = [
         Compensable::class,
     ];
-
 
     public function process(ProceedingJoinPoint $proceedingJoinPoint)
     {
@@ -46,6 +41,5 @@ class CompensableAnnotationAspect extends AbstractAspect
         self::set($annotation->master['proxy'], $annotation);
 
         return $proceedingJoinPoint->process();
-
     }
 }

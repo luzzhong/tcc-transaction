@@ -1,39 +1,43 @@
 <?php
 
 declare(strict_types=1);
-
+/**
+ * This is a TCC distributed transaction component.
+ * @link     https://github.com/luzzhong/tcc-transaction
+ * @document https://github.com/luzzhong/tcc-transaction/blob/master/README.md
+ * @license  https://github.com/luzzhong/tcc-transaction/blob/master/LICENSE
+ */
 namespace LoyaltyLu\TccTransaction\Util;
 
-use Hyperf\Redis\Redis;
 use Hyperf\Di\Annotation\Inject;
+use Hyperf\Redis\Redis;
 
 /**
  * 基于redis实现的分布式锁
- * Class Lock
- * @package LoyaltyLu\TccTransaction\Util
+ * Class Lock.
  */
 class Lock
 {
     /**
-     * @Inject()
+     * @Inject
      * @var Redis
      */
-    private $redis;
+    protected $redis;
+
     /**
-     * 锁 key 的集合
+     * 锁 key 的集合.
      * @var array
      */
-    private $keysLock = [];//所有已经锁定的key值
+    private $keysLock = []; //所有已经锁定的key值
 
-    private $cachePrefix = 'tcc:lock:';//锁前缀
+    private $cachePrefix = 'tcc:lock:'; //锁前缀
 
     /**
      * 加锁
      * @param $key
-     * @param string $prefix
-     * @param null $expire 秒 默认10秒
+     * @param int $expire 秒 默认10秒
      */
-    public function lock($key, $expire = 10)
+    public function lock($key, int $expire = 10): bool
     {
         $keyUse = $this->getKey($key);
         $result = $this->redis->set($keyUse, 1, ['EX' => $expire, 'NX']);
@@ -47,10 +51,8 @@ class Lock
     /**
      * 解锁
      * @param $key
-     * @param $prefix
-     * @return mixed
      */
-    public function unLock($key)
+    public function unLock($key): bool
     {
         $keyUse = $this->getKey($key);
         $result = $this->redis->del($keyUse);
@@ -63,10 +65,9 @@ class Lock
     }
 
     /**
-     * 删除所有锁定的key
-     * @return bool
+     * 删除所有锁定的key.
      */
-    public function unlockAll()
+    public function unlockAll(): bool
     {
         if (empty($this->keysLock)) {
             return true;
@@ -80,7 +81,7 @@ class Lock
     }
 
     /**
-     * 获取key
+     * 获取key.
      * @param $key
      * @return string
      */
@@ -88,5 +89,4 @@ class Lock
     {
         return $this->cachePrefix . ':' . $key;
     }
-
 }

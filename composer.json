@@ -7,10 +7,22 @@
         }
     ],
     "require": {
-        "hyperf/nsq": "~1.1.0",
-        "hyperf/snowflake": "~1.1.0",
-        "hyperf/logger": "~1.1.0",
+        "hyperf/config": "v2.2.0",
+        "hyperf/di": "v2.2.0",
+        "hyperf/guzzle": "^2.2",
+        "hyperf/logger": "v2.2.0",
+        "hyperf/nsq": "v2.2.0",
+        "hyperf/redis": "v2.2.0",
+        "hyperf/rpc-client": "v2.2.0",
+        "hyperf/server": "v2.2.0",
+        "hyperf/snowflake": "v2.2.0",
+        "hyperf/utils": "^2.2",
         "phpmailer/phpmailer": "~6.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": ">=7.0",
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpstan/phpstan": "^0.12"
     },
     "replace":{
         "loyaltylu/transaction": "1.1.0"
@@ -35,12 +47,9 @@
         }
     },
     "scripts": {
-        "test": "./bin/co-phpunit --colors=always",
-        "test-coverage": "phpunit --colors=always --coverage-clover clover.xml",
-        "license-check": "docheader check src/ test/",
-        "cs-fix": "php-cs-fixer fix $1",
-        "json-fix": "./bin/composer-json-fixer",
-        "analyse": "phpstan analyse --memory-limit 300M -l 3 -c phpstan.neon"
+        "test": "co-phpunit -c phpunit.xml --colors=always",
+        "analyse": "phpstan analyse --memory-limit 4096M -l 5 -c phpstan.neon",
+        "cs-fix": "php-cs-fixer fix $1"
     },
     "minimum-stability": "dev",
     "prefer-stable": true
