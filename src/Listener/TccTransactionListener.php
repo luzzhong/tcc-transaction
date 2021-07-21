@@ -59,41 +59,41 @@ class TccTransactionListener extends AbstractConsumer
 
     public function consume(Message $payload): ?string
     {
-        $info = Json::decode($payload->getBody());
-        $tccInfo = $this->redis->hget('Tcc', $info['tid']);
+        $info = Json::decode($payload->getBody(), false);
+        $tccInfo = $this->redis->hget('Tcc', $info->tid);
         $data = Json::decode($tccInfo, true);
 
         $timeout = config('transaction.nsq_detection_time', 5);
         if ($data['last_update_time'] + $timeout > time()) {
-            NsqProducer::sendQueue($info['tid'], $info['info'], 'tcc-transaction');
+            NsqProducer::sendQueue($info->tid, $info->info, 'tcc-transaction');
             return Result::ACK;
         }
         if ($data['status'] !== 'success') {
             if ($data['tcc_method'] === 'tryMethod') {
-                $this->tcc->send($info['info'], (object) $data['services'], 'cancelMethod', $info['tid'], $data['content'], 1);
+                $this->tcc->send($info->info, (object) $data['services'], 'cancelMethod', $info->tid, $data['content'], 1);
             } elseif ($data['tcc_method'] == 'cancelMethod') {
-                if ($this->state->upTccStatus($info['tid'], 'cancelMethod', 'retried_cancel_nsq_count')) {
-                    $this->tcc->send($info['info'], (object) $data['services'], 'cancelMethod', $info['tid'], $data['content'], 1);
+                if ($this->state->upTccStatus($info->tid, 'cancelMethod', 'retried_cancel_nsq_count')) {
+                    $this->tcc->send($info->info, (object) $data['services'], 'cancelMethod', $info->tid, $data['content'], 1);
                 } else {
-                    $this->redis->hDel('Tcc', $info['tid']);
-                    $this->redis->hSet('TccError', $info['tid'], $tccInfo);
+                    $this->redis->hDel('Tcc', $info->tid);
+                    $this->redis->hSet('TccError', $info->tid, $tccInfo);
                     //异常通知
-                    make(TccErrorReport::class)->cancleFailReport('事务异常: 回滚失败', $info['tid'], $data['tcc_method'], $data['status']);
+                    make(TccErrorReport::class)->cancleFailReport('事务异常: 回滚失败', $info->tid, $data['tcc_method'], $data['status']);
                 }
             } elseif ($data['tcc_method'] == 'confirmMethod') {
-                if ($this->state->upTccStatus($info['tid'], 'confirmMethod', 'retried_confirm_nsq_count')) {
-                    $this->tcc->send($info['info'], (object) $data['services'], 'confirmMethod', $info['tid'], $data['content'], 1);
+                if ($this->state->upTccStatus($info->tid, 'confirmMethod', 'retried_confirm_nsq_count')) {
+                    $this->tcc->send($info->info, (object) $data['services'], 'confirmMethod', $info->tid, $data['content'], 1);
                 }
-                $this->tcc->send($info['info'], (object) $data['services'], 'cancelMethod', $info['tid'], $data['content'], 1);
+                $this->tcc->send($info->info, (object) $data['services'], 'cancelMethod', $info->tid, $data['content'], 1);
             }
         } elseif ($data['status'] === 'success' && $data['tcc_method'] === 'cancelMethod') {
-            $this->redis->hDel('Tcc', $info['tid']);
-            $this->redis->hSet('TccSuccess', $info['tid'], $tccInfo);
+            $this->redis->hDel('Tcc', $info->tid);
+            $this->redis->hSet('TccSuccess', $info->tid, $tccInfo);
         } elseif ($data['status'] === 'success' && $data['tcc_method'] === 'confirmMethod') {
-            $this->redis->hDel('Tcc', $info['tid']);
-            $this->redis->hSet('TccSuccess', $info['tid'], $tccInfo);
+            $this->redis->hDel('Tcc', $info->tid);
+            $this->redis->hSet('TccSuccess', $info->tid, $tccInfo);
         }
-        $msg = sprintf('事务:%s,%s阶段,执行状态:%s.', $info['tid'], $data['tcc_method'], $data['status']);
+        $msg = sprintf('事务:%s,%s阶段,执行状态:%s.', $info->tid, $data['tcc_method'], $data['status']);
         $this->logger->debug($msg);
         return Result::ACK;
     }
