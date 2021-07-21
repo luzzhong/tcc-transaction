@@ -1,6 +1,8 @@
 # tcc-transaction
 
+
 >>有兴趣优化和完善的小伙伴欢迎联系我 vx:ai979126035
+
 
 基于Hyperf的TCC分布式事务
 
@@ -11,6 +13,8 @@
 *   允许空回滚
 *   防悬挂控制
 *   幂等控制
+
+###### 支持 hyperf2.* 版本，感谢 <a href="https://github.com/cexll" target='_blank'>@cexll</a>
 
 ###### 目前支持钉钉以及邮件推送事务失败通知，感谢 <a href="https://github.com/lizhanfei" target='_blank'>@lizhanfei</a>
 
