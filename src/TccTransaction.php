@@ -65,6 +65,9 @@ class TccTransaction
         }
         try {
             $results = $parallel->wait();
+            if (! is_array($params)) {
+                $params = [$params];
+            }
             $params[$tcc_method] = $results;
             $this->state->upAllTccStatus($tid, $tcc_method, 'success', $params);
             if ($tcc_method === 'tryMethod') {
