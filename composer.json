@@ -7,16 +7,16 @@
         }
     ],
     "require": {
-        "hyperf/config": "v2.2.0",
-        "hyperf/di": "v2.2.0",
+        "hyperf/config": "~2.2.0",
+        "hyperf/di": "~2.2.0",
         "hyperf/guzzle": "^2.2",
-        "hyperf/logger": "v2.2.0",
-        "hyperf/nsq": "v2.2.0",
-        "hyperf/redis": "v2.2.0",
-        "hyperf/rpc-client": "v2.2.0",
-        "hyperf/server": "v2.2.0",
-        "hyperf/snowflake": "v2.2.0",
-        "hyperf/utils": "^2.2",
+        "hyperf/logger": "~2.2.0",
+        "hyperf/nsq": "~2.2.0",
+        "hyperf/redis": "~2.2.0",
+        "hyperf/rpc-client": "~2.2.0",
+        "hyperf/server": "~2.2.0",
+        "hyperf/snowflake": "~2.2.0",
+        "hyperf/utils": "~2.2",
         "phpmailer/phpmailer": "~6.1"
     },
     "require-dev": {
